@@ -2,142 +2,98 @@ import { AmbientLight, AxesHelper, DirectionalLight, GridHelper, PerspectiveCame
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { IFCLoader } from "web-ifc-three/IFCLoader";
 
+window.doThree = (ifcfile) => {
 
-const doThree = () => {
+  console.log(ifcfile);
+  //ifcfile = "../../ifc/hags.ifc";
+  //Creates the Three.js scene
+  const scene = new Scene();
 
-//Creates the Three.js scene
-const scene = new Scene();
-scene.background = new Color( 0xbfe6ff );
-//const model = "../models/HagsPlay_SpecialtyEquipment_AdventureTrailTunnel.ifc";
-const model = "../models/Vestre - Air Bench - 3217.ifc";
+  //Sets up the renderer, fetching the canvas of the HTML
+  const threeCanvas = document.getElementById("scene3d");
+  const size = {
+    width: threeCanvas.clientWidth,
+    height: threeCanvas.clientWidth
+  };
 
-//const model = "../models/Vestre - Air Bench - 3206.ifc";
+  const aspect = 1;
+  const camera = new PerspectiveCamera(65, aspect);
+  camera.position.z = 15;
+  camera.position.y = 13; 
+  camera.position.x = 8;
 
+  //Creates the lights of the scene
+  const lightColor = 0xffffff;
 
-//Sets up the renderer, fetching the canvas of the HTML
-const threeCanvas = document.getElementById("scene3d");
+  const ambientLight = new AmbientLight(lightColor, 0.5);
+  scene.add(ambientLight);
 
-//Object to store the size of the viewport
-// const size = {
-//   width: window.innerWidth,
-//   height: window.innerHeight,
-// };
+  const directionalLight = new DirectionalLight(lightColor, 1);
+  directionalLight.position.set(0, 10, 0);
+  directionalLight.target.position.set(-5, 0, 0);
+  scene.add(directionalLight);
+  scene.add(directionalLight.target);
 
+  const renderer = new WebGLRenderer({
+    canvas: threeCanvas,
+    alpha: true,
+  });
 
-//Creates the camera (point of view of the user)
+  let bsize;
 
-const size = {
-  width: threeCanvas.clientWidth,
-  height: threeCanvas.clientHeight,
-};
+  const ifcLoader = new IFCLoader();
 
+  ifcLoader.load(ifcfile, (ifcModel) => {
+      
+      scene.add(ifcModel);
 
-const aspect = size.width / size.height;
-const camera = new PerspectiveCamera(75, aspect);
-camera.position.z = 15;
-camera.position.y = 13; 
-camera.position.x = 8;
+      ifcModel.geometry.center();
 
-//Creates the lights of the scene
-const lightColor = 0xffffff;
+      let bbox = new Box3().setFromObject(ifcModel);
+      let helper = new Box3Helper(bbox, new Color(0, 255, 0));
+      
+   //   scene.add(helper);
+      bsize = bbox.getSize(new Vector3()); 
+      
+      camera.position.z = bsize.z ;
+      camera.position.y = bsize.y;
+      camera.position.x = bsize.x;
 
-const ambientLight = new AmbientLight(lightColor, 0.5);
-scene.add(ambientLight);
+    }
+  );
 
-const directionalLight = new DirectionalLight(lightColor, 1);
-directionalLight.position.set(0, 10, 0);
-directionalLight.target.position.set(-5, 0, 0);
-scene.add(directionalLight);
-scene.add(directionalLight.target);
+  renderer.setSize(size.width, size.height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  camera.updateProjectionMatrix();
 
+  //Creates the orbit controls (to navigate the scene)
+  const controls = new OrbitControls(camera, threeCanvas);
+  controls.enableDamping = true;
+  controls.target.set(0, 0, 0);
+  controls.autoRotateSpeed = 2.0;
+  controls.autoRotate = true;
+  controls.addEventListener('start', function(){
+    controls.autoRotate = false;
+  });
 
-const renderer = new WebGLRenderer({
-  canvas: threeCanvas,
-  alpha: true,
-});
+  //Animation loop
+  const animate = () => {
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
 
-renderer.setSize(size.width, size.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-camera.updateProjectionMatrix();
+  };
 
-//Creates grids and axes in the scene
-// const grid = new GridHelper(50, 30);
-// scene.add(grid);
+  const refresh = () =>{
+    size.width = document.getElementById("holder").offsetWidth;
+    camera.aspect = 1;
+    camera.updateProjectionMatrix();
+    renderer.setSize(size.width, size.width);
+  }
 
-// const axes = new AxesHelper();
-// axes.material.depthTest = false;
-// axes.renderOrder = 1;
-// scene.add(axes);
-
-
-let bsize;
-
-const ifcLoader = new IFCLoader();
-ifcLoader.load(model, (ifcModel) => {
-  
-  scene.add(ifcModel);
-
-  ifcModel.geometry.center();
-
-  let bbox = new Box3().setFromObject(ifcModel);
-  let helper = new Box3Helper(bbox, new Color(0, 255, 0));
-  
-  bsize = bbox.getSize(new Vector3()); 
-  
-  //scene.add(helper);
-
-  camera.position.z = bsize.z ;
-  camera.position.y = bsize.y;
-  camera.position.x = bsize.x;
-
-}
-);
-
-//Creates the orbit controls (to navigate the scene)
-const controls = new OrbitControls(camera, threeCanvas);
-controls.enableDamping = true;
-controls.target.set(0, 0, 0);
-
-//Animation loop
-const animate = () => {
-  controls.update();
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
-};
-
-
-
-animate();
-
-
-
-const resize = () => {
-
-   //size.width = window.innerWidth;
-   //size.height = window.innerHeight;
-
-  // size.width = document.getElementById("holder").offsetWidth;
-  // size.height = document.getElementById("holder").offsetHeight;
-
-  // console.log(size.width, size.height);
-
-  // camera.aspect = size.width / size.height;
-  // camera.updateProjectionMatrix();
-  // renderer.setSize(size.width, size.height);
-  // console.log("resized");
-
-  window.location.reload();
-  //just refresh?
-};
-
-//Adjust the viewport to the size of the browser
-window.addEventListener("resize", resize);
-//resize();
-
-};
-
-
-
-window.onload = (event) => {
-  doThree();
+  const resize = () => {
+    setTimeout(refresh,200);
+  };
+  window.addEventListener("resize", resize);
+  animate();
 };

@@ -10,13 +10,23 @@
   </head>
   <body>
     <h2 class="on-top">Model</h2>
-  <div class="fluid-container">
+  <div class="container">
     <div class="row">
   <div id="holder" class="col-md-6">
       <canvas id="scene3d" ></canvas>
+      <p class="note">mouse button down and drag to rotate<br />scrollwheel to zoom</p>
   </div>
   </div>
   </div>
-    <script src="bundle.js"></script>
+  <script>
+
+    //var model = "../models/Vestre - Air Bench - 3217.ifc";
+   //var ifcfile = "../models/HagsPlay_SpecialtyEquipment_AdventureTrailTunnel.ifc";
+    //var model = "../models/Vestre - Air Bench - 3206.ifc";
+  </script>
+  <script src="bundle.js"></script>
+  <script>
+    window.doThree("../models/HagsPlay_SpecialtyEquipment_AdventureTrailTunnel.ifc");
+  </script>
   </body>
 </html> 
